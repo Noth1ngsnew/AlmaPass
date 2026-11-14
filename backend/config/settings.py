@@ -177,3 +177,14 @@ CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:
 
 # За сколько минут до начала и после конца события работает check-in
 CHECKIN_WINDOW_MINUTES = int(os.environ.get("CHECKIN_WINDOW_MINUTES", "60"))
+
+# --- NFT ---
+NFT_RPC_URL = os.environ.get("NFT_RPC_URL", "https://rpc-amoy.polygon.technology")
+NFT_CHAIN_ID = int(os.environ.get("NFT_CHAIN_ID", "80002"))
+NFT_EXPLORER_URL = os.environ.get("NFT_EXPLORER_URL", "https://amoy.polygonscan.com").rstrip("/")
+NFT_PRIVATE_KEY = os.environ.get("NFT_PRIVATE_KEY", "")
+NFT_CONTRACT_ADDRESS = os.environ.get("NFT_CONTRACT_ADDRESS", "")
+# Выдача идёт в фоне, чтобы пользователь не ждал подтверждения сети
+NFT_MINT_ASYNC = os.environ.get("NFT_MINT_ASYNC", "1") == "1"
+# Адрес, по которому снаружи доступен этот сервер (попадает в ссылку на метаданные токена)
+PUBLIC_API_URL = os.environ.get("PUBLIC_API_URL", "http://127.0.0.1:8000").rstrip("/")

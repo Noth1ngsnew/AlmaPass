@@ -21,7 +21,7 @@ python manage.py runserver
 
 Админ-панель: http://127.0.0.1:8000/admin/
 
-Тесты: `python manage.py test`
+Тесты: `python manage.py test`. Тесты выдачи NFT запускаются, если установлен `requirements-dev.txt` (локальная сеть в памяти).
 
 ## Frontend: запуск
 
@@ -48,6 +48,30 @@ npm run start:lan                          # в frontend
 
 Перед показом запустите `python manage.py seed_demo`: команда сдвигает событие «AlmaPass Demo Day» на текущее время, а отметиться можно только во время события.
 
+## NFT: настройка (один раз)
+
+NFT выдаются в тестовой сети Polygon Amoy: это бесплатно, настоящие деньги не нужны. Без настройки сайт работает как обычно, а NFT остаются в статусе «Ещё не получен».
+
+1. Создайте серверный кошелёк, с которого сервер будет выдавать токены:
+   ```bash
+   python manage.py create_nft_wallet
+   ```
+   Команда покажет адрес и строку `NFT_PRIVATE_KEY=...`. Строку впишите в `backend/.env`.
+2. Получите на показанный адрес тестовые монеты POL: https://faucet.polygon.technology/ (сеть Polygon Amoy).
+3. Опубликуйте смарт-контракт:
+   ```bash
+   python manage.py deploy_nft_contract
+   ```
+   Команда покажет строку `NFT_CONTRACT_ADDRESS=...`. Её тоже впишите в `backend/.env`.
+4. Перезапустите сервер и проверьте:
+   ```bash
+   python manage.py nft_status
+   ```
+
+Пользователю нужен только адрес кошелька в профиле (кнопка «Подключить MetaMask»). После check-in сервер сам выдаёт NFT, статус виден на странице «Мои NFT». Команда `python manage.py nft_status --retry` повторяет незавершённые выдачи.
+
+Исходник контракта лежит в `contracts/AlmaPassNFT.sol`, скомпилированная версия — в `backend/rewards/contract/AlmaPassNFT.json`. Пересобрать: `cd contracts && npm install && npm run compile`.
+
 ## API
 
 Авторизация: заголовок `Authorization: Bearer <access>`. Язык ответа: `?lang=ru` или заголовок `Accept-Language` (en, ru, kk).
@@ -68,6 +92,8 @@ npm run start:lan                          # в frontend
 | `POST /api/checkin/` | вошедший | Отметка посещения по коду из QR |
 | `GET /api/visits/` | вошедший | Мои посещения и статус NFT |
 | `GET /api/events/{id}/checkin-code/` | владелец, админ | Код для QR и число отметившихся |
+| `POST /api/visits/{id}/claim/` | вошедший | Получить NFT за посещение или повторить выдачу |
+| `GET /api/nft/metadata/{id}/` | все | Метаданные токена (на них ссылается `tokenURI`) |
 | `POST /api/organizers/apply/` | вошедший | Стать организатором |
 | `GET /api/categories/`, `/api/venues/`, `/api/organizers/` | все | Справочники |
 

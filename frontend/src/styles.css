@@ -1241,3 +1241,125 @@ select {
     scrollbar-width: none;
   }
 }
+
+/* ---------- Коллекция NFT ---------- */
+.grid--nft {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+.nft-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.nft-card.is-minted {
+  border-color: var(--green);
+  box-shadow: 0 0 0 1px var(--green), var(--shadow);
+}
+
+.nft-card__media {
+  position: relative;
+  display: block;
+  aspect-ratio: 1;
+  background: linear-gradient(135deg, var(--ink), var(--green));
+}
+
+.nft-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(1) opacity(0.55);
+}
+
+.nft-card.is-minted .nft-card__media img {
+  filter: none;
+}
+
+.nft-card__seal {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  background: var(--apple);
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  transform: rotate(-12deg);
+}
+
+.nft-card__body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  flex: 1;
+  padding: 14px 16px 16px;
+}
+
+.nft-card__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  margin-top: auto;
+  padding-top: 8px;
+}
+
+.link {
+  color: var(--green);
+  font-weight: 600;
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.form-error a {
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.fox {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  background: #f6851b;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}

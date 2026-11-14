@@ -4,3 +4,4 @@ python-dotenv>=1.2,<2
 djangorestframework>=3.18,<4
 djangorestframework-simplejwt>=5.5,<6
 django-cors-headers>=4.9,<5
+web3>=8,<9

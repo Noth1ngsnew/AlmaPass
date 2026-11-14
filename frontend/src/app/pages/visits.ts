@@ -1,5 +1,7 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { Auth } from '../core/auth';
 import { EventsApi } from '../core/events-api';
 import { EventDatePipe, I18n, TPipe } from '../core/i18n';
 import { Visit } from '../core/models';
@@ -19,51 +21,145 @@ import { Visit } from '../core/models';
         <p class="state">{{ 'visits.empty' | t }}</p>
         <p class="center"><a class="btn" routerLink="/scan">{{ 'nav.scan' | t }}</a></p>
       } @else {
-        <div class="rows">
+        <p class="count">{{ 'visits.stats' | t: { visits: visits().length, nfts: mintedCount() } }}</p>
+
+        @if (notice(); as key) {
+          <p class="form-error" role="alert">
+            {{ key | t }}
+            @if (key === 'visits.needWallet') {
+              <a routerLink="/profile">{{ 'visits.addWallet' | t }} →</a>
+            }
+          </p>
+        }
+
+        <div class="grid grid--nft">
           @for (visit of visits(); track visit.id) {
-            <a class="row" [routerLink]="['/events', visit.event.id]">
-              <span class="row__icon row__icon--nft" aria-hidden="true">NFT</span>
-              <span class="row__main">
-                <strong>{{ visit.event.title }}</strong>
-                <small>
-                  {{ visit.event.venue.name }} ·
-                  {{ 'visits.checkedIn' | t: { date: (visit.checked_in_at | eventDate) } }}
-                </small>
-              </span>
-              @if (visit.nft_reward; as nft) {
-                <span class="tag" [class.tag--warn]="nft.status === 'pending'" [class.tag--fail]="nft.status === 'failed'">
-                  {{ 'visits.nft.' + nft.status | t }}
+            @let status = visit.nft_reward?.status ?? 'pending';
+            <article class="nft-card" [class.is-minted]="status === 'minted'">
+              <a class="nft-card__media" [routerLink]="['/events', visit.event.id]">
+                @if (visit.event.nft_image_url || visit.event.image_url; as src) {
+                  <img [src]="src" [alt]="visit.event.title" loading="lazy" (error)="hide($event)" />
+                }
+                <span class="nft-card__seal" aria-hidden="true">NFT</span>
+              </a>
+              <div class="nft-card__body">
+                <span
+                  class="tag"
+                  [class.tag--warn]="status === 'pending' || status === 'minting'"
+                  [class.tag--fail]="status === 'failed'"
+                >
+                  @if (status === 'minting') {
+                    <span class="spinner" aria-hidden="true"></span>
+                  }
+                  {{ 'visits.nft.' + status | t }}
                 </span>
-              }
-            </a>
+                <h3 class="card__title">
+                  <a [routerLink]="['/events', visit.event.id]">{{ visit.event.title }}</a>
+                </h3>
+                <p class="card__venue">
+                  {{ visit.event.venue.name }} · {{ visit.checked_in_at | eventDate: 'day' }}
+                </p>
+
+                <div class="nft-card__foot">
+                  @switch (status) {
+                    @case ('minted') {
+                      <strong>{{ 'visits.token' | t: { id: visit.nft_reward?.token_id ?? '' } }}</strong>
+                      @if (visit.nft_reward?.explorer_url; as url) {
+                        <a class="link" [href]="url" target="_blank" rel="noopener">{{ 'visits.explorer' | t }} ↗</a>
+                      }
+                    }
+                    @case ('minting') {
+                      <small class="muted">{{ 'visits.mintingHint' | t }}</small>
+                    }
+                    @default {
+                      <button type="button" class="btn" [disabled]="busyId() === visit.id" (click)="claim(visit)">
+                        {{ (status === 'failed' ? 'visits.retry' : 'visits.claim') | t }}
+                      </button>
+                    }
+                  }
+                </div>
+              </div>
+            </article>
           }
         </div>
       }
     </div>
   `,
 })
-export class Visits {
+export class Visits implements OnDestroy {
   private api = inject(EventsApi);
   private i18n = inject(I18n);
+  private auth = inject(Auth);
 
   protected readonly visits = signal<Visit[]>([]);
   protected readonly loading = signal(true);
   protected readonly error = signal(false);
+  protected readonly notice = signal('');
+  protected readonly busyId = signal<number | null>(null);
+  protected readonly mintedCount = computed(
+    () => this.visits().filter((visit) => visit.nft_reward?.status === 'minted').length,
+  );
+
+  private timer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
-    effect((onCleanup) => {
+    effect(() => {
       this.i18n.lang();
-      const sub = this.api.visits().subscribe({
-        next: (res) => {
-          this.visits.set(res.results);
-          this.loading.set(false);
-        },
-        error: () => {
-          this.error.set(true);
-          this.loading.set(false);
-        },
-      });
-      onCleanup(() => sub.unsubscribe());
+      this.load();
     });
+  }
+
+  private load(): void {
+    this.api.visits().subscribe({
+      next: (res) => {
+        this.visits.set(res.results);
+        this.loading.set(false);
+        this.error.set(false);
+        this.scheduleRefresh();
+      },
+      error: () => {
+        this.error.set(true);
+        this.loading.set(false);
+      },
+    });
+  }
+
+  /** Пока хотя бы один NFT выдаётся, список сам обновляется каждые 4 секунды. */
+  private scheduleRefresh(): void {
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = this.visits().some((visit) => visit.nft_reward?.status === 'minting')
+      ? setTimeout(() => this.load(), 4000)
+      : null;
+  }
+
+  protected claim(visit: Visit): void {
+    this.notice.set('');
+    if (!this.auth.user()?.wallet_address) {
+      this.notice.set('visits.needWallet');
+      return;
+    }
+    this.busyId.set(visit.id);
+    this.api.claimNft(visit.id).subscribe({
+      next: (updated) => {
+        this.busyId.set(null);
+        this.visits.update((items) => items.map((item) => (item.id === updated.id ? updated : item)));
+        this.scheduleRefresh();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.busyId.set(null);
+        const code = error.error?.code;
+        this.notice.set(
+          code === 'no_wallet' ? 'visits.needWallet' : code === 'not_configured' ? 'visits.notConfigured' : 'common.error',
+        );
+      },
+    });
+  }
+
+  protected hide(event: Event): void {
+    (event.target as HTMLElement).hidden = true;
+  }
+
+  ngOnDestroy(): void {
+    if (this.timer) clearTimeout(this.timer);
   }
 }

@@ -57,11 +57,12 @@ export interface EventItem {
 
 export interface NftReward {
   id: number;
-  status: 'pending' | 'minted' | 'failed';
+  status: 'pending' | 'minting' | 'minted' | 'failed';
   wallet_address: string;
   contract_address: string;
   token_id: number | null;
   tx_hash: string;
+  explorer_url: string;
   metadata_uri: string;
   minted_at: string | null;
 }

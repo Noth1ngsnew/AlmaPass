@@ -58,6 +58,10 @@ export class EventsApi {
     return this.http.get<Page<Visit>>(`${API_URL}/visits/`);
   }
 
+  claimNft(visitId: number): Observable<Visit> {
+    return this.http.post<Visit>(`${API_URL}/visits/${visitId}/claim/`, {});
+  }
+
   checkinCode(eventId: number): Observable<CheckinCode> {
     return this.http.get<CheckinCode>(`${API_URL}/events/${eventId}/checkin-code/`);
   }

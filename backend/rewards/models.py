@@ -24,6 +24,7 @@ class NFTReward(models.Model):
 
     class Status(models.TextChoices):
         PENDING = 'pending', 'Pending'
+        MINTING = 'minting', 'Minting'
         MINTED = 'minted', 'Minted'
         FAILED = 'failed', 'Failed'
 

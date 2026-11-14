@@ -19,7 +19,19 @@ import { Visit } from '../core/models';
             <a [routerLink]="['/events', item.event.id]">{{ item.event.title }}</a>
             <small>{{ item.event.venue.name }} · {{ item.event.start_at | eventDate }}</small>
           </p>
-          <p class="muted">{{ 'checkin.successText' | t }}</p>
+          <p class="muted">
+            @switch (item.nft_reward?.status) {
+              @case ('minted') {
+                {{ 'checkin.minted' | t }}
+              }
+              @case ('minting') {
+                {{ 'checkin.minting' | t }}
+              }
+              @default {
+                {{ 'checkin.successText' | t }}
+              }
+            }
+          </p>
           @if (!auth.user()?.wallet_address) {
             <p class="form-error">{{ 'checkin.noWallet' | t }}</p>
             <a class="btn" routerLink="/profile">{{ 'checkin.toProfile' | t }}</a>

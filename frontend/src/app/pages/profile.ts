@@ -39,6 +39,12 @@ import { Lang } from '../core/models';
             <input name="wallet" [(ngModel)]="wallet" placeholder="0x…" spellcheck="false" />
             <small>{{ 'profile.walletHint' | t }}</small>
           </label>
+          <button type="button" class="btn btn--ghost" (click)="connectWallet()">
+            <span class="fox" aria-hidden="true"></span>{{ 'profile.connect' | t }}
+          </button>
+          @if (walletError(); as key) {
+            <p class="form-error" role="alert">{{ key | t }}</p>
+          }
 
           <label class="field">
             <span>{{ 'profile.language' | t }}</span>
@@ -75,6 +81,24 @@ export class Profile {
   protected readonly busy = signal(false);
   protected readonly saved = signal(false);
   protected readonly errors = signal<string[]>([]);
+  protected readonly walletError = signal('');
+
+  /** Запрашивает адрес у расширения MetaMask и подставляет его в поле. */
+  protected async connectWallet(): Promise<void> {
+    this.walletError.set('');
+    const ethereum = (window as unknown as { ethereum?: { request(args: { method: string }): Promise<string[]> } })
+      .ethereum;
+    if (!ethereum) {
+      this.walletError.set('profile.noMetamask');
+      return;
+    }
+    try {
+      const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+      if (accounts[0]) this.wallet = accounts[0];
+    } catch {
+      this.walletError.set('profile.connectDenied');
+    }
+  }
 
   constructor() {
     // Заполняем форму, когда профиль загрузился
