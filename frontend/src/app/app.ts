@@ -20,6 +20,7 @@ import { I18n, TPipe } from './core/i18n';
             <a routerLink="/favorites" routerLinkActive="is-active">{{ 'nav.favorites' | t }}</a>
             <a routerLink="/visits" routerLinkActive="is-active">{{ 'nav.visits' | t }}</a>
             <a routerLink="/scan" routerLinkActive="is-active">{{ 'nav.scan' | t }}</a>
+            <a routerLink="/organizer" routerLinkActive="is-active">{{ 'nav.organizer' | t }}</a>
           }
         </nav>
 

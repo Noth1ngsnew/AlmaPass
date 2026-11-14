@@ -7,6 +7,7 @@ import {
   CheckinCode,
   EventFilters,
   EventItem,
+  EventPayload,
   Organizer,
   Page,
   SearchResult,
@@ -55,7 +56,7 @@ export class EventsApi {
   }
 
   visits(): Observable<Page<Visit>> {
-    return this.http.get<Page<Visit>>(`${API_URL}/visits/`);
+    return this.http.get<Page<Visit>>(`${API_URL}/visits/`, { params: { page_size: '100' } });
   }
 
   claimNft(visitId: number): Observable<Visit> {
@@ -66,8 +67,40 @@ export class EventsApi {
     return this.http.get<CheckinCode>(`${API_URL}/events/${eventId}/checkin-code/`);
   }
 
+  venues(): Observable<Venue[]> {
+    return this.http.get<Venue[]>(`${API_URL}/venues/`);
+  }
+
+  createVenue(data: { name: string; address: string }): Observable<Venue> {
+    return this.http.post<Venue>(`${API_URL}/venues/`, data);
+  }
+
+  myOrganizer(): Observable<Organizer> {
+    return this.http.get<Organizer>(`${API_URL}/organizers/me/`);
+  }
+
+  applyOrganizer(data: { name: string; description: string; website: string }): Observable<Organizer> {
+    return this.http.post<Organizer>(`${API_URL}/organizers/apply/`, data);
+  }
+
+  myEvents(): Observable<Page<EventItem>> {
+    return this.http.get<Page<EventItem>>(`${API_URL}/events/`, { params: { mine: '1', page_size: '100' } });
+  }
+
+  createEvent(data: EventPayload): Observable<EventItem> {
+    return this.http.post<EventItem>(`${API_URL}/events/`, data);
+  }
+
+  updateEvent(id: number, data: EventPayload): Observable<EventItem> {
+    return this.http.patch<EventItem>(`${API_URL}/events/${id}/`, data);
+  }
+
+  deleteEvent(id: number): Observable<void> {
+    return this.http.delete<void>(`${API_URL}/events/${id}/`);
+  }
+
   favorites(): Observable<Page<EventItem>> {
-    return this.http.get<Page<EventItem>>(`${API_URL}/favorites/`);
+    return this.http.get<Page<EventItem>>(`${API_URL}/favorites/`, { params: { page_size: '100' } });
   }
 
   setFavorite(id: number, value: boolean): Observable<{ is_favorite: boolean }> {

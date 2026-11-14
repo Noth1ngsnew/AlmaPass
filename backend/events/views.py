@@ -37,6 +37,19 @@ class OrganizerViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Organizer.objects.all()
     serializer_class = OrganizerSerializer
 
+    @action(detail=False, methods=['get', 'patch'], permission_classes=[permissions.IsAuthenticated])
+    def me(self, request):
+        """Профиль организатора текущего пользователя: просмотр и правка."""
+        organizer = getattr(request.user, 'organizer', None)
+        if organizer is None:
+            return Response({'detail': 'No organizer profile.'}, status=status.HTTP_404_NOT_FOUND)
+        if request.method == 'PATCH':
+            serializer = self.get_serializer(organizer, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+        return Response(self.get_serializer(organizer).data)
+
     @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def apply(self, request):
         """Пользователь создаёт профиль организатора и получает роль organizer."""
@@ -62,7 +75,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
         if params.get('mine') and user.is_authenticated:
             # Кабинет организатора: свои события в любом статусе
-            qs = qs.filter(organizer__user=user)
+            qs = qs.filter(organizer__user=user).annotate(visits_count=Count('visits')).order_by('start_at', 'id')
         elif is_admin(user):
             pass
         elif user.is_authenticated:

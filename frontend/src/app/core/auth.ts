@@ -75,6 +75,11 @@ export class Auth {
     return this.http.patch<User>(`${API_URL}/auth/me/`, changes).pipe(tap((user) => this.user.set(user)));
   }
 
+  /** Перечитывает профиль с сервера, например после получения роли организатора. */
+  reload(): Observable<User> {
+    return this.loadMe();
+  }
+
   logout(): void {
     this.setTokens(null, null);
     this.user.set(null);

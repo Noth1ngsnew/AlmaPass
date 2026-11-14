@@ -6,6 +6,8 @@ import { Checkin } from './pages/checkin';
 import { EventDetail } from './pages/event-detail';
 import { EventQr } from './pages/event-qr';
 import { Favorites } from './pages/favorites';
+import { EventForm } from './pages/event-form';
+import { OrganizerCabinet } from './pages/organizer-cabinet';
 import { Profile } from './pages/profile';
 import { Scan } from './pages/scan';
 import { Search } from './pages/search';
@@ -15,6 +17,9 @@ export const routes: Routes = [
   { path: '', component: Catalog },
   { path: 'events/:id', component: EventDetail },
   { path: 'events/:id/qr', component: EventQr, canActivate: [authGuard] },
+  { path: 'organizer', component: OrganizerCabinet, canActivate: [authGuard] },
+  { path: 'organizer/events/new', component: EventForm, canActivate: [authGuard] },
+  { path: 'organizer/events/:id/edit', component: EventForm, canActivate: [authGuard] },
   { path: 'search', component: Search },
   { path: 'scan', component: Scan, canActivate: [authGuard] },
   { path: 'checkin/:token', component: Checkin, canActivate: [authGuard] },

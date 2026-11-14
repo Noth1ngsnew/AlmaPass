@@ -41,6 +41,12 @@ export interface EventItem {
   id: number;
   title: string;
   description: string;
+  title_en: string;
+  title_ru: string;
+  title_kk: string;
+  description_en: string;
+  description_ru: string;
+  description_kk: string;
   category: Category;
   venue: Venue;
   organizer: Organizer;
@@ -53,6 +59,25 @@ export interface EventItem {
   status: 'draft' | 'pending' | 'published' | 'rejected';
   is_favorite: boolean;
   is_visited: boolean;
+  visits_count: number | null;
+}
+
+/** Поля формы события, которые уходят на сервер */
+export interface EventPayload {
+  title_en: string;
+  title_ru: string;
+  title_kk: string;
+  description_en: string;
+  description_ru: string;
+  description_kk: string;
+  category_id: number;
+  venue_id: number;
+  start_at: string;
+  end_at: string;
+  price: string;
+  image_url: string;
+  source_url: string;
+  nft_image_url: string;
 }
 
 export interface NftReward {

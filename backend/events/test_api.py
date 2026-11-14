@@ -129,3 +129,20 @@ class ApiTest(APITestCase):
 
     def test_search_by_category_name(self):
         self.assertEqual(len(self.client.get('/api/search/?q=музыка').data['events']), 1)
+
+    def test_organizer_cabinet(self):
+        self.assertEqual(self.client.get('/api/organizers/me/').status_code, 401)
+        self.client.force_authenticate(self.user)
+        self.assertEqual(self.client.get('/api/organizers/me/').status_code, 404)
+        self.client.force_authenticate(self.owner)
+        self.assertEqual(self.client.get('/api/organizers/me/').data['name'], 'Org')
+        r = self.client.patch('/api/organizers/me/', {'description': 'Concerts', 'is_verified': True})
+        self.assertEqual((r.data['description'], r.data['is_verified']), ('Concerts', False))
+
+        mine = self.client.get('/api/events/?mine=1').data['results']
+        self.assertEqual({e['status'] for e in mine}, {'published', 'pending'})
+        self.assertEqual([e['visits_count'] for e in mine], [0, 0])
+        self.assertIsNone(self.client.get('/api/events/').data['results'][0]['visits_count'])
+
+        self.assertEqual(self.client.delete(f'/api/events/{self.draft.id}/').status_code, 204)
+        self.assertEqual(self.client.get('/api/events/?mine=1').data['count'], 1)

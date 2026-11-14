@@ -1363,3 +1363,189 @@ select {
     animation: none;
   }
 }
+
+/* ---------- Кабинет организатора ---------- */
+.apply {
+  margin-inline: auto;
+  width: min(640px, 100%);
+}
+
+.cabinet__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.cabinet__head .page__title {
+  margin-bottom: 4px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px;
+  margin: 18px 0 28px;
+}
+
+.stat {
+  display: grid;
+  gap: 2px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.stat strong {
+  font: 700 34px/1 var(--display);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.stat--accent {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+
+.stat--accent span {
+  color: inherit;
+  opacity: 0.75;
+}
+
+.row--event {
+  flex-wrap: wrap;
+}
+
+.row--event:hover {
+  border-color: var(--line);
+  box-shadow: none;
+}
+
+.row--event strong a:hover {
+  color: var(--apple-dark);
+}
+
+.row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn--small {
+  padding: 5px 12px;
+  font-size: 14px;
+}
+
+.tag--draft,
+.tag--pending {
+  background: var(--warn-soft);
+  color: #7a5a00;
+}
+
+.tag--rejected {
+  background: var(--apple-soft);
+  color: var(--apple-dark);
+}
+
+/* ---------- Форма события ---------- */
+.form fieldset {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  margin: 0;
+  padding: 16px 0 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+.form legend {
+  padding: 0 10px 0 0;
+  font: 700 18px/1.2 var(--display);
+}
+
+.form__group {
+  display: grid;
+  gap: 14px;
+}
+
+.form__group[hidden] {
+  display: none;
+}
+
+.form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  font: inherit;
+  font-weight: 400;
+  resize: vertical;
+}
+
+.field textarea:focus {
+  outline: none;
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px var(--green-soft);
+}
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--paper);
+}
+
+.tab {
+  flex: 1;
+  display: grid;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab small {
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.tab.is-active {
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.subform {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--paper);
+}
+
+.link--button {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
