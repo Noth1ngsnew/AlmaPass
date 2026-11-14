@@ -15,6 +15,7 @@ createdb almapass               # или создайте базу через pg
 python manage.py migrate
 python manage.py setup_roles    # группы Moderators и Support для админки
 python manage.py createsuperuser
+python manage.py seed_demo      # демо-данные: категории, площадки, 18 событий
 python manage.py runserver
 ```
 
