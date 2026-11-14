@@ -22,6 +22,25 @@ python manage.py runserver
 
 Тесты: `python manage.py test`
 
+## API
+
+Авторизация: заголовок `Authorization: Bearer <access>`. Язык ответа: `?lang=ru` или заголовок `Accept-Language` (en, ru, kk).
+
+| Метод и путь | Кто | Что делает |
+|---|---|---|
+| `POST /api/auth/register/` | все | Регистрация |
+| `POST /api/auth/login/` | все | Вход, выдаёт `access` и `refresh` |
+| `POST /api/auth/refresh/` | все | Обновление токена |
+| `GET, PATCH /api/auth/me/` | вошедший | Профиль, кошелёк, язык |
+| `GET /api/events/` | все | Каталог; фильтры `category`, `venue`, `organizer`, `date_from`, `date_to`, `free`, `mine` |
+| `POST /api/events/` | организатор | Создать событие (уходит на модерацию) |
+| `PATCH, DELETE /api/events/{id}/` | владелец, админ | Изменить или удалить |
+| `POST /api/events/{id}/moderate/` | админ | Опубликовать или отклонить |
+| `POST, DELETE /api/events/{id}/favorite/` | вошедший | Добавить в избранное или убрать |
+| `GET /api/favorites/` | вошедший | Моё избранное |
+| `POST /api/organizers/apply/` | вошедший | Стать организатором |
+| `GET /api/categories/`, `/api/venues/`, `/api/organizers/` | все | Справочники |
+
 ## Структура
 
 | Приложение | Модели |

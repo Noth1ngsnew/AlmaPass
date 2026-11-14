@@ -1,4 +1,5 @@
 from datetime import timedelta
+from io import StringIO
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -47,7 +48,7 @@ class ModelsTest(TestCase):
         self.assertEqual(NFTReward.objects.create(visit=visit).status, NFTReward.Status.PENDING)
 
     def test_setup_roles_creates_groups(self):
-        call_command('setup_roles', verbosity=0)
+        call_command('setup_roles', stdout=StringIO())
         moderators = Group.objects.get(name='Moderators')
         self.assertTrue(moderators.permissions.filter(codename='change_event').exists())
         self.assertFalse(Group.objects.get(name='Support').permissions.filter(codename='delete_event').exists())
