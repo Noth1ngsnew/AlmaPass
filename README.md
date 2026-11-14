@@ -23,6 +23,18 @@ python manage.py runserver
 
 Тесты: `python manage.py test`
 
+## Frontend: запуск
+
+Нужен Node.js 20 или новее. Бэкенд должен быть запущен.
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+Сайт: http://localhost:4200
+
 ## API
 
 Авторизация: заголовок `Authorization: Bearer <access>`. Язык ответа: `?lang=ru` или заголовок `Accept-Language` (en, ru, kk).
@@ -44,8 +56,18 @@ python manage.py runserver
 
 ## Структура
 
+Бэкенд (`backend/`):
+
 | Приложение | Модели |
 |---|---|
 | `accounts` | User (роль, кошелёк, язык) |
 | `events` | Category, Venue, Organizer, Event, Favorite |
 | `rewards` | Visit (check-in), NFTReward |
+
+Фронтенд (`frontend/src/app/`):
+
+| Папка | Что внутри |
+|---|---|
+| `core/` | Модели, запросы к API, авторизация, переводы |
+| `components/` | Карточка события, кнопка избранного |
+| `pages/` | Каталог, событие, вход и регистрация, избранное, профиль |
