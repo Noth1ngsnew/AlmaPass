@@ -61,7 +61,25 @@ export interface Page<T> {
   results: T[];
 }
 
+export interface VenueHit extends Venue {
+  events_count: number;
+}
+
+export interface OrganizerHit extends Organizer {
+  events_count: number;
+}
+
+export interface SearchResult {
+  query: string;
+  total: number;
+  events: EventItem[];
+  venues: VenueHit[];
+  organizers: OrganizerHit[];
+}
+
 export interface EventFilters {
+  venue?: string;
+  organizer?: string;
   category?: string;
   date_from?: string;
   date_to?: string;

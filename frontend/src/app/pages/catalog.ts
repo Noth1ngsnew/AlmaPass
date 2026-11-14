@@ -1,5 +1,7 @@
-import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
 import { EventCard } from '../components/event-card';
 import { Auth } from '../core/auth';
 import { EventsApi } from '../core/events-api';
@@ -10,7 +12,7 @@ const PAGE_SIZE = 12;
 
 @Component({
   selector: 'app-catalog',
-  imports: [FormsModule, TPipe, EventCard],
+  imports: [FormsModule, RouterLink, TPipe, EventCard],
   template: `
     <section class="hero">
       <div class="container">
@@ -32,6 +34,13 @@ const PAGE_SIZE = 12;
             </button>
           }
         </div>
+
+        @if (scopeLabel(); as label) {
+          <div class="scope">
+            <span>{{ label }}</span>
+            <a routerLink="/" aria-label="×" title="×">×</a>
+          </div>
+        }
 
         <div class="filters__row">
           <label class="field field--inline">
@@ -86,6 +95,16 @@ export class Catalog {
   private i18n = inject(I18n);
   private auth = inject(Auth);
 
+  /** Параметры адреса ?venue=3 или ?organizer=2 — приходят со страницы поиска */
+  readonly venue = input<string>();
+  readonly organizer = input<string>();
+  private readonly scopeName = signal('');
+  protected readonly scopeLabel = computed(() => {
+    const name = this.scopeName();
+    if (!name) return '';
+    return this.i18n.t(this.venue() ? 'catalog.venueFilter' : 'catalog.organizerFilter', { name });
+  });
+
   protected readonly categories = signal<Category[]>([]);
   protected readonly events = signal<EventItem[]>([]);
   protected readonly count = signal(0);
@@ -110,12 +129,31 @@ export class Catalog {
       this.api.categories().subscribe({ next: (items) => this.categories.set(items), error: () => {} });
     });
 
+    // Название площадки или организатора для подписи фильтра
+    effect((onCleanup) => {
+      const venue = this.venue();
+      const organizer = this.organizer();
+      untracked(() => {
+        this.scopeName.set('');
+        this.page.set(1);
+      });
+      const request: Observable<{ name: string }> | null = venue
+        ? this.api.venue(venue)
+        : organizer
+          ? this.api.organizer(organizer)
+          : null;
+      const sub = request?.subscribe({ next: (item) => this.scopeName.set(item.name), error: () => {} });
+      onCleanup(() => sub?.unsubscribe());
+    });
+
     // Список перезагружается при смене фильтров, страницы, языка и после входа (отметки избранного)
     effect((onCleanup) => {
       this.i18n.lang();
       this.auth.isLoggedIn();
       const filters = {
         category: this.category(),
+        venue: this.venue(),
+        organizer: this.organizer(),
         date_from: this.dateFrom(),
         date_to: this.dateTo(),
         free: this.freeOnly(),

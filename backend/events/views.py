@@ -1,14 +1,16 @@
-from django.db.models import Q
+from django.db.models import Count, Q
 from rest_framework import generics, mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from accounts.models import User
 
 from .models import Category, Event, Favorite, Organizer, Venue
 from .permissions import IsOrganizerOwnerOrReadOnly, is_admin
-from .serializers import CategorySerializer, EventSerializer, OrganizerSerializer, VenueSerializer
+from .serializers import (CategorySerializer, EventSerializer, OrganizerSearchSerializer, OrganizerSerializer,
+                          VenueSearchSerializer, VenueSerializer)
 
 
 class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -137,3 +139,48 @@ class FavoriteListView(generics.ListAPIView):
         context = super().get_serializer_context()
         context['favorite_ids'] = set(self.request.user.favorites.values_list('event_id', flat=True))
         return context
+
+
+class SearchView(APIView):
+    """Единый поиск: GET /api/search/?q=текст — события, площадки и организаторы."""
+
+    permission_classes = [permissions.AllowAny]
+    LIMIT = 12
+
+    def get(self, request):
+        query = request.query_params.get('q', '').strip()
+        if len(query) < 2:
+            return Response({'query': query, 'total': 0, 'events': [], 'venues': [], 'organizers': []})
+
+        published = Q(events__status=Event.Status.PUBLISHED)
+        events = (
+            Event.objects.filter(status=Event.Status.PUBLISHED)
+            .filter(
+                Q(title_en__icontains=query) | Q(title_ru__icontains=query) | Q(title_kk__icontains=query)
+                | Q(description_en__icontains=query) | Q(description_ru__icontains=query)
+                | Q(description_kk__icontains=query)
+                | Q(category__name_en__icontains=query) | Q(category__name_ru__icontains=query)
+                | Q(category__name_kk__icontains=query)
+            )
+            .select_related('category', 'venue', 'organizer')[:self.LIMIT]
+        )
+        venues = (
+            Venue.objects.filter(Q(name__icontains=query) | Q(address__icontains=query))
+            .annotate(events_count=Count('events', filter=published))[:self.LIMIT]
+        )
+        organizers = (
+            Organizer.objects.filter(Q(name__icontains=query) | Q(description__icontains=query))
+            .annotate(events_count=Count('events', filter=published))[:self.LIMIT]
+        )
+
+        context = {'request': request}
+        if request.user.is_authenticated:
+            context['favorite_ids'] = set(request.user.favorites.values_list('event_id', flat=True))
+        data = {
+            'query': query,
+            'events': EventSerializer(events, many=True, context=context).data,
+            'venues': VenueSearchSerializer(venues, many=True).data,
+            'organizers': OrganizerSearchSerializer(organizers, many=True).data,
+        }
+        data['total'] = len(data['events']) + len(data['venues']) + len(data['organizers'])
+        return Response(data)

@@ -36,6 +36,20 @@ class OrganizerSerializer(serializers.ModelSerializer):
         read_only_fields = ('is_verified',)
 
 
+class VenueSearchSerializer(VenueSerializer):
+    events_count = serializers.IntegerField(read_only=True)
+
+    class Meta(VenueSerializer.Meta):
+        fields = VenueSerializer.Meta.fields + ('events_count',)
+
+
+class OrganizerSearchSerializer(OrganizerSerializer):
+    events_count = serializers.IntegerField(read_only=True)
+
+    class Meta(OrganizerSerializer.Meta):
+        fields = OrganizerSerializer.Meta.fields + ('events_count',)
+
+
 class EventSerializer(serializers.ModelSerializer):
     title = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()

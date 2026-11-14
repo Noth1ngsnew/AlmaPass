@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_URL } from './config';
-import { Category, EventFilters, EventItem, Page } from './models';
+import { Category, EventFilters, EventItem, Organizer, Page, SearchResult, Venue } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class EventsApi {
@@ -15,6 +15,8 @@ export class EventsApi {
   list(filters: EventFilters = {}): Observable<Page<EventItem>> {
     let params = new HttpParams();
     if (filters.category) params = params.set('category', filters.category);
+    if (filters.venue) params = params.set('venue', filters.venue);
+    if (filters.organizer) params = params.set('organizer', filters.organizer);
     if (filters.date_from) params = params.set('date_from', filters.date_from);
     if (filters.date_to) params = params.set('date_to', filters.date_to);
     if (filters.free) params = params.set('free', '1');
@@ -24,6 +26,18 @@ export class EventsApi {
 
   get(id: number): Observable<EventItem> {
     return this.http.get<EventItem>(`${API_URL}/events/${id}/`);
+  }
+
+  search(query: string): Observable<SearchResult> {
+    return this.http.get<SearchResult>(`${API_URL}/search/`, { params: { q: query } });
+  }
+
+  venue(id: string): Observable<Venue> {
+    return this.http.get<Venue>(`${API_URL}/venues/${id}/`);
+  }
+
+  organizer(id: string): Observable<Organizer> {
+    return this.http.get<Organizer>(`${API_URL}/organizers/${id}/`);
   }
 
   favorites(): Observable<Page<EventItem>> {

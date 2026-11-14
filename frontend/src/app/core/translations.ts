@@ -3,6 +3,20 @@ import { Lang } from './models';
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  'nav.search': 'Search events, venues, organizers',
+  'search.title': 'Search',
+  'search.button': 'Search',
+  'search.hint': 'Type at least 2 characters: an event, a venue or an organizer.',
+  'search.results': 'Results for “{query}”: {count}',
+  'search.nothing': 'Nothing found for “{query}”. Try another word.',
+  'search.events': 'Events',
+  'search.venues': 'Venues',
+  'search.organizers': 'Organizers',
+  'search.eventsCount': 'Events: {count}',
+  'search.showEvents': 'Show events',
+  'catalog.venueFilter': 'Venue: {name}',
+  'catalog.organizerFilter': 'Organizer: {name}',
+
   'nav.events': 'Events',
   'nav.favorites': 'Favorites',
   'nav.profile': 'Profile',
@@ -74,6 +88,20 @@ const en: Dict = {
 };
 
 const ru: Dict = {
+  'nav.search': 'Поиск событий, площадок, организаторов',
+  'search.title': 'Поиск',
+  'search.button': 'Найти',
+  'search.hint': 'Введите не меньше 2 символов: событие, площадку или организатора.',
+  'search.results': 'Результаты по запросу «{query}»: {count}',
+  'search.nothing': 'По запросу «{query}» ничего не найдено. Попробуйте другое слово.',
+  'search.events': 'События',
+  'search.venues': 'Площадки',
+  'search.organizers': 'Организаторы',
+  'search.eventsCount': 'Событий: {count}',
+  'search.showEvents': 'Показать события',
+  'catalog.venueFilter': 'Площадка: {name}',
+  'catalog.organizerFilter': 'Организатор: {name}',
+
   'nav.events': 'События',
   'nav.favorites': 'Избранное',
   'nav.profile': 'Профиль',
@@ -145,6 +173,20 @@ const ru: Dict = {
 };
 
 const kk: Dict = {
+  'nav.search': 'Іс-шара, алаң, ұйымдастырушы іздеу',
+  'search.title': 'Іздеу',
+  'search.button': 'Табу',
+  'search.hint': 'Кемінде 2 таңба енгізіңіз: іс-шара, алаң немесе ұйымдастырушы.',
+  'search.results': '«{query}» сұранысы бойынша нәтижелер: {count}',
+  'search.nothing': '«{query}» сұранысы бойынша ештеңе табылмады. Басқа сөзбен көріңіз.',
+  'search.events': 'Іс-шаралар',
+  'search.venues': 'Алаңдар',
+  'search.organizers': 'Ұйымдастырушылар',
+  'search.eventsCount': 'Іс-шаралар: {count}',
+  'search.showEvents': 'Іс-шараларды көрсету',
+  'catalog.venueFilter': 'Алаң: {name}',
+  'catalog.organizerFilter': 'Ұйымдастырушы: {name}',
+
   'nav.events': 'Іс-шаралар',
   'nav.favorites': 'Таңдаулылар',
   'nav.profile': 'Профиль',

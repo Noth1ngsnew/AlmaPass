@@ -1,11 +1,12 @@
 import { Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { Auth } from './core/auth';
 import { I18n, TPipe } from './core/i18n';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, TPipe],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, FormsModule, TPipe],
   template: `
     <header class="topbar">
       <div class="container topbar__inner">
@@ -20,6 +21,19 @@ import { I18n, TPipe } from './core/i18n';
             <a routerLink="/profile" routerLinkActive="is-active">{{ 'nav.profile' | t }}</a>
           }
         </nav>
+
+        <form class="search-box" role="search" (ngSubmit)="search()">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" /><path d="m20 20-3.8-3.8" />
+          </svg>
+          <input
+            type="search"
+            name="q"
+            [(ngModel)]="query"
+            [placeholder]="'nav.search' | t"
+            [attr.aria-label]="'nav.search' | t"
+          />
+        </form>
 
         <div class="topbar__right">
           <div class="lang" role="group" aria-label="Language">
@@ -51,6 +65,13 @@ export class App {
   protected auth = inject(Auth);
   protected i18n = inject(I18n);
   private router = inject(Router);
+
+  protected query = '';
+
+  protected search(): void {
+    const q = this.query.trim();
+    if (q) this.router.navigate(['/search'], { queryParams: { q } });
+  }
 
   protected logout(): void {
     this.auth.logout();

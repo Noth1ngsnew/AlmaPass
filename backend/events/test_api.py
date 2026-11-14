@@ -112,3 +112,20 @@ class ApiTest(APITestCase):
         self.assertEqual(self.user.role, 'organizer')
         self.assertEqual(self.client.post('/api/organizers/apply/', {'name': 'Again'}).status_code, 400)
         self.assertEqual(self.client.post('/api/events/', self.payload()).status_code, 201)
+
+    def test_search_covers_three_entity_types(self):
+        r = self.client.get('/api/search/?q=джаз')  # русское название, регистр не важен
+        self.assertEqual([e['title_en'] for e in r.data['events']], ['Jazz night'])
+        r = self.client.get('/api/search/?q=ESENTAI')
+        self.assertEqual((len(r.data['venues']), r.data['venues'][0]['events_count']), (1, 1))
+        r = self.client.get('/api/search/?q=org')
+        self.assertEqual([o['name'] for o in r.data['organizers']], ['Org'])
+        self.assertEqual(r.data['total'], 1)
+
+    def test_search_hides_unpublished_and_ignores_short_query(self):
+        self.assertEqual(self.client.get('/api/search/?q=secret').data['total'], 0)
+        self.assertEqual(self.client.get('/api/search/?q=j').data['total'], 0)
+        self.assertEqual(self.client.get('/api/search/').data['total'], 0)
+
+    def test_search_by_category_name(self):
+        self.assertEqual(len(self.client.get('/api/search/?q=музыка').data['events']), 1)
