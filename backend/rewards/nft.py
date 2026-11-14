@@ -10,6 +10,7 @@ from django.db import connection
 from django.utils import timezone
 from web3 import Web3
 from web3.logs import DISCARD
+from web3.middleware import ExtraDataToPOAMiddleware
 
 from .models import NFTReward
 
@@ -43,7 +44,11 @@ def is_valid_wallet(address):
 
 @lru_cache(maxsize=1)
 def get_web3():
-    return Web3(Web3.HTTPProvider(settings.NFT_RPC_URL, request_kwargs={'timeout': 30}))
+    w3 = Web3(Web3.HTTPProvider(settings.NFT_RPC_URL, request_kwargs={'timeout': 30}))
+    # Polygon — сеть типа Proof-of-Authority: её блоки содержат удлинённое поле extraData,
+    # и без этой настройки web3 отказывается их читать
+    w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
+    return w3
 
 
 def get_account(w3):
