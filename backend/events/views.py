@@ -89,6 +89,7 @@ class EventViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_authenticated:
             context['favorite_ids'] = set(user.favorites.values_list('event_id', flat=True))
+            context['visited_ids'] = set(user.visits.values_list('event_id', flat=True))
         return context
 
     def perform_create(self, serializer):
@@ -112,6 +113,20 @@ class EventViewSet(viewsets.ModelViewSet):
             return Response({'is_favorite': True})
         Favorite.objects.filter(user=request.user, event=event).delete()
         return Response({'is_favorite': False})
+
+    @action(detail=True, methods=['get'], url_path='checkin-code',
+            permission_classes=[permissions.IsAuthenticated])
+    def checkin_code(self, request, pk=None):
+        """Код для QR и число отметившихся. Только для владельца события и админа."""
+        event = self.get_object()
+        if not (is_admin(request.user) or event.organizer.user_id == request.user.id):
+            self.permission_denied(request)
+        return Response({
+            'event_id': event.id,
+            'token': str(event.checkin_token),
+            'visits_count': event.visits.count(),
+            'is_published': event.status == Event.Status.PUBLISHED,
+        })
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def moderate(self, request, pk=None):

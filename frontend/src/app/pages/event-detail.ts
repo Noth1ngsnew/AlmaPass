@@ -62,11 +62,20 @@ import { EventItem } from '../core/models';
               <a class="btn btn--block" [href]="item.source_url" target="_blank" rel="noopener">{{ 'event.tickets' | t }}</a>
             }
 
+            @if (canManage(item)) {
+              <a class="btn btn--ghost btn--block" [routerLink]="['/events', item.id, 'qr']">{{ 'qr.open' | t }}</a>
+            }
+
             <div class="nft">
               <div class="nft__badge" aria-hidden="true">NFT</div>
               <div>
                 <strong>{{ 'event.nftTitle' | t }}</strong>
-                <p>{{ 'event.nftText' | t }}</p>
+                @if (item.is_visited) {
+                  <p class="nft__done">✓ {{ 'event.visited' | t }}</p>
+                } @else {
+                  <p>{{ 'event.nftText' | t }}</p>
+                  <a class="nft__link" routerLink="/scan">{{ 'event.scanCta' | t }} →</a>
+                }
               </div>
             </div>
           </aside>
@@ -108,6 +117,12 @@ export class EventDetail {
   /** Если картинка не загрузилась, остаётся фоновый градиент. */
   protected hide(event: Event): void {
     (event.target as HTMLElement).hidden = true;
+  }
+
+  /** QR-код видят организатор события и администратор. */
+  protected canManage(item: EventItem): boolean {
+    const user = this.auth.user();
+    return !!user && (user.role === 'admin' || user.organizer_id === item.organizer.id);
   }
 
   protected price(item: EventItem): string {

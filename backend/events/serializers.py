@@ -59,6 +59,7 @@ class EventSerializer(serializers.ModelSerializer):
     category_id = serializers.PrimaryKeyRelatedField(source='category', queryset=Category.objects.all(), write_only=True)
     venue_id = serializers.PrimaryKeyRelatedField(source='venue', queryset=Venue.objects.all(), write_only=True)
     is_favorite = serializers.SerializerMethodField()
+    is_visited = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
@@ -67,7 +68,7 @@ class EventSerializer(serializers.ModelSerializer):
             'title_en', 'title_ru', 'title_kk', 'description_en', 'description_ru', 'description_kk',
             'category', 'venue', 'organizer', 'category_id', 'venue_id',
             'start_at', 'end_at', 'price', 'image_url', 'source_url', 'nft_image_url',
-            'status', 'is_favorite', 'created_at',
+            'status', 'is_favorite', 'is_visited', 'created_at',
         )
         read_only_fields = ('status', 'created_at')
 
@@ -79,6 +80,9 @@ class EventSerializer(serializers.ModelSerializer):
 
     def get_is_favorite(self, obj):
         return obj.id in self.context.get('favorite_ids', ())
+
+    def get_is_visited(self, obj):
+        return obj.id in self.context.get('visited_ids', ())
 
     def validate(self, attrs):
         start = attrs.get('start_at', getattr(self.instance, 'start_at', None))

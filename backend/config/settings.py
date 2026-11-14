@@ -29,7 +29,8 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'dev-only-insecure-key-change-m
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', '1') == '1'
 
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# В режиме разработки пускаем любые адреса, чтобы сайт открывался с телефона в той же сети Wi-Fi
+ALLOWED_HOSTS = ["*"] if DEBUG else os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 
 # Application definition
@@ -171,4 +172,8 @@ SIMPLE_JWT = {
 }
 
 # Адрес Angular dev-сервера
+CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOWED_ORIGINS = os.environ.get("CORS_ALLOWED_ORIGINS", "http://localhost:4200,http://127.0.0.1:4200").split(",")
+
+# За сколько минут до начала и после конца события работает check-in
+CHECKIN_WINDOW_MINUTES = int(os.environ.get("CHECKIN_WINDOW_MINUTES", "60"))

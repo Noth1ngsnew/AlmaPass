@@ -2,7 +2,17 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_URL } from './config';
-import { Category, EventFilters, EventItem, Organizer, Page, SearchResult, Venue } from './models';
+import {
+  Category,
+  CheckinCode,
+  EventFilters,
+  EventItem,
+  Organizer,
+  Page,
+  SearchResult,
+  Venue,
+  Visit,
+} from './models';
 
 @Injectable({ providedIn: 'root' })
 export class EventsApi {
@@ -38,6 +48,18 @@ export class EventsApi {
 
   organizer(id: string): Observable<Organizer> {
     return this.http.get<Organizer>(`${API_URL}/organizers/${id}/`);
+  }
+
+  checkin(token: string): Observable<Visit> {
+    return this.http.post<Visit>(`${API_URL}/checkin/`, { token });
+  }
+
+  visits(): Observable<Page<Visit>> {
+    return this.http.get<Page<Visit>>(`${API_URL}/visits/`);
+  }
+
+  checkinCode(eventId: number): Observable<CheckinCode> {
+    return this.http.get<CheckinCode>(`${API_URL}/events/${eventId}/checkin-code/`);
   }
 
   favorites(): Observable<Page<EventItem>> {

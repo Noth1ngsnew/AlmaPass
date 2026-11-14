@@ -52,6 +52,33 @@ export interface EventItem {
   nft_image_url: string;
   status: 'draft' | 'pending' | 'published' | 'rejected';
   is_favorite: boolean;
+  is_visited: boolean;
+}
+
+export interface NftReward {
+  id: number;
+  status: 'pending' | 'minted' | 'failed';
+  wallet_address: string;
+  contract_address: string;
+  token_id: number | null;
+  tx_hash: string;
+  metadata_uri: string;
+  minted_at: string | null;
+}
+
+export interface Visit {
+  id: number;
+  event: EventItem;
+  checked_in_at: string;
+  nft_reward: NftReward | null;
+  already_checked_in?: boolean;
+}
+
+export interface CheckinCode {
+  event_id: number;
+  token: string;
+  visits_count: number;
+  is_published: boolean;
 }
 
 export interface Page<T> {

@@ -106,7 +106,26 @@ class Command(BaseCommand):
             )
             created_count += created
 
+        # Событие, которое идёт прямо сейчас: на нём показывают check-in.
+        # Время обновляется при каждом запуске команды, поэтому запускайте её перед показом.
+        now = timezone.now()
+        Event.objects.update_or_create(
+            title_en='AlmaPass Demo Day',
+            defaults={
+                'title_ru': 'Демо-день AlmaPass', 'title_kk': 'AlmaPass демо күні',
+                'description_en': 'Live presentation of the AlmaPass platform. Scan the QR code to check in.',
+                'description_ru': 'Живая презентация платформы AlmaPass. Отсканируйте QR-код, чтобы отметиться.',
+                'description_kk': 'AlmaPass платформасының тікелей таныстырылымы. Белгілену үшін QR-кодты сканерлеңіз.',
+                'category': categories['education'], 'venue': venues['esentai'],
+                'organizer': organizers['demo_organizer'],
+                'start_at': now - timedelta(hours=1), 'end_at': now + timedelta(hours=8), 'price': Decimal(0),
+                'image_url': 'https://picsum.photos/seed/almapassdemo/800/500',
+                'status': Event.Status.PUBLISHED,
+            },
+        )
+
         self.stdout.write(self.style.SUCCESS(
             f'Готово: категорий {len(categories)}, площадок {len(venues)}, '
             f'организаторов {len(organizers)}, новых событий {created_count}.'))
+        self.stdout.write('Событие для показа check-in: «AlmaPass Demo Day» (идёт сейчас, ещё 8 часов).')
         self.stdout.write('Вход организатора для демо: demo_organizer / demo12345')

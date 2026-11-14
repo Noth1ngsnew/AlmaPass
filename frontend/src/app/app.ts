@@ -18,7 +18,8 @@ import { I18n, TPipe } from './core/i18n';
           <a routerLink="/" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">{{ 'nav.events' | t }}</a>
           @if (auth.isLoggedIn()) {
             <a routerLink="/favorites" routerLinkActive="is-active">{{ 'nav.favorites' | t }}</a>
-            <a routerLink="/profile" routerLinkActive="is-active">{{ 'nav.profile' | t }}</a>
+            <a routerLink="/visits" routerLinkActive="is-active">{{ 'nav.visits' | t }}</a>
+            <a routerLink="/scan" routerLinkActive="is-active">{{ 'nav.scan' | t }}</a>
           }
         </nav>
 
@@ -44,7 +45,10 @@ import { I18n, TPipe } from './core/i18n';
             }
           </div>
           @if (auth.user(); as user) {
-            <span class="topbar__user">{{ user.username }}</span>
+            <a routerLink="/profile" class="topbar__user" [title]="'nav.profile' | t">
+              <span class="topbar__avatar" aria-hidden="true">{{ user.username.charAt(0).toUpperCase() }}</span>
+              <span class="topbar__name">{{ user.username }}</span>
+            </a>
             <button type="button" class="btn btn--ghost" (click)="logout()">{{ 'nav.logout' | t }}</button>
           } @else {
             <a routerLink="/login" class="btn btn--ghost">{{ 'nav.login' | t }}</a>
