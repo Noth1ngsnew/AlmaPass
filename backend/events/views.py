@@ -103,6 +103,10 @@ class EventViewSet(viewsets.ModelViewSet):
         if user.is_authenticated:
             context['favorite_ids'] = set(user.favorites.values_list('event_id', flat=True))
             context['visited_ids'] = set(user.visits.values_list('event_id', flat=True))
+            context['discounts'] = {
+                item.event_id: {'code': item.code, 'status': item.status, 'discount_percent': item.discount_percent}
+                for item in user.discount_codes.all()
+            }
         return context
 
     def perform_create(self, serializer):
@@ -170,7 +174,7 @@ class FavoriteListView(generics.ListAPIView):
 
 
 class SearchView(APIView):
-    """Единый поиск: GET /api/search/?q=текст — события, площадки и организаторы."""
+    """Единый поиск по названиям: GET /api/search/?q=текст — события, площадки и организаторы."""
 
     permission_classes = [permissions.AllowAny]
     LIMIT = 12
@@ -181,23 +185,18 @@ class SearchView(APIView):
             return Response({'query': query, 'total': 0, 'events': [], 'venues': [], 'organizers': []})
 
         published = Q(events__status=Event.Status.PUBLISHED)
+        # Ищем только по названиям: событие (на любом из трёх языков), площадка, организатор
         events = (
             Event.objects.filter(status=Event.Status.PUBLISHED)
-            .filter(
-                Q(title_en__icontains=query) | Q(title_ru__icontains=query) | Q(title_kk__icontains=query)
-                | Q(description_en__icontains=query) | Q(description_ru__icontains=query)
-                | Q(description_kk__icontains=query)
-                | Q(category__name_en__icontains=query) | Q(category__name_ru__icontains=query)
-                | Q(category__name_kk__icontains=query)
-            )
+            .filter(Q(title_en__icontains=query) | Q(title_ru__icontains=query) | Q(title_kk__icontains=query))
             .select_related('category', 'venue', 'organizer')[:self.LIMIT]
         )
         venues = (
-            Venue.objects.filter(Q(name__icontains=query) | Q(address__icontains=query))
+            Venue.objects.filter(name__icontains=query)
             .annotate(events_count=Count('events', filter=published))[:self.LIMIT]
         )
         organizers = (
-            Organizer.objects.filter(Q(name__icontains=query) | Q(description__icontains=query))
+            Organizer.objects.filter(name__icontains=query)
             .annotate(events_count=Count('events', filter=published))[:self.LIMIT]
         )
 

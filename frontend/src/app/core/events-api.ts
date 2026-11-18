@@ -5,9 +5,11 @@ import { API_URL } from './config';
 import {
   Category,
   CheckinCode,
+  DiscountCode,
   EventFilters,
   EventItem,
   EventPayload,
+  LoyaltyInfo,
   Organizer,
   Page,
   SearchResult,
@@ -57,6 +59,22 @@ export class EventsApi {
 
   visits(): Observable<Page<Visit>> {
     return this.http.get<Page<Visit>>(`${API_URL}/visits/`, { params: { page_size: '100' } });
+  }
+
+  loyalty(): Observable<LoyaltyInfo> {
+    return this.http.get<LoyaltyInfo>(`${API_URL}/loyalty/`);
+  }
+
+  getDiscount(eventId: number): Observable<DiscountCode> {
+    return this.http.post<DiscountCode>(`${API_URL}/events/${eventId}/discount/`, {});
+  }
+
+  myDiscounts(): Observable<Page<DiscountCode>> {
+    return this.http.get<Page<DiscountCode>>(`${API_URL}/discounts/`, { params: { page_size: '100' } });
+  }
+
+  redeemDiscount(code: string): Observable<DiscountCode> {
+    return this.http.post<DiscountCode>(`${API_URL}/discounts/redeem/`, { code });
   }
 
   claimNft(visitId: number): Observable<Visit> {

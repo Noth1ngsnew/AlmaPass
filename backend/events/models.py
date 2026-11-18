@@ -87,6 +87,8 @@ class Event(TranslatedFieldsMixin, models.Model):
     checkin_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     # Картинка/метаданные NFT, который выдаётся за посещение
     nft_image_url = models.URLField(blank=True)
+    # Даёт ли организатор скидку владельцам NFT (по уровню лояльности)
+    nft_discount = models.BooleanField(default=True, help_text='Скидка для владельцев NFT по их уровню')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

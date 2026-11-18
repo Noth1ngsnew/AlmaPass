@@ -12,6 +12,8 @@ GROUPS = {
         'visit': ['view'],
         'nftreward': ['view'],
         'user': ['view'],
+        'loyaltylevel': ['view', 'change'],
+        'discountcode': ['view'],
     },
     'Support': {
         'event': ['view'],
@@ -21,6 +23,8 @@ GROUPS = {
         'visit': ['view'],
         'nftreward': ['view', 'change'],
         'user': ['view'],
+        'loyaltylevel': ['view'],
+        'discountcode': ['view', 'change'],
     },
 }
 

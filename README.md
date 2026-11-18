@@ -72,6 +72,29 @@ NFT выдаются в тестовой сети Polygon Amoy: это бесп�
 
 Исходник контракта лежит в `contracts/AlmaPassNFT.sol`, скомпилированная версия — в `backend/rewards/contract/AlmaPassNFT.json`. Пересобрать: `cd contracts && npm install && npm run compile`.
 
+## Уровни NFT и скидки
+
+Каждый выданный NFT повышает уровень пользователя. Уровни хранятся в таблице `rewards_loyaltylevel` и меняются в админ-панели:
+
+| Уровень | NFT | Скидка |
+|---|---|---|
+| Bronze | 1 | — |
+| Silver | 3 | 10% |
+| Gold | 5 | 15% |
+| Platinum | 10 | 20% |
+
+На платном событии (если организатор не выключил «Скидку для владельцев NFT») пользователь с уровнем Silver и выше получает одноразовый код вида `ALMA-XXXX-XXXX`. Организатор вводит код в своём кабинете («Проверка кода скидки») — код помечается использованным. Процент фиксируется в момент выдачи.
+
+Подготовка к показу: чтобы у пользователя сразу был уровень Silver, выдайте ему 3 настоящих NFT (нужен настроенный NFT и кошелёк в профиле):
+
+```bash
+python manage.py give_demo_nfts <логин> --count 3
+```
+
+## Показ базы данных
+
+Все действия на сайте сразу записываются в PostgreSQL. В `docs/database-demo.sql` лежат готовые запросы для DataGrip: пользователи, избранное, посещения и NFT, события и модерация, уровни, коды скидок, поиск. Сделайте действие на сайте и выполните соответствующий запрос — появится новая строка.
+
 ## API
 
 Авторизация: заголовок `Authorization: Bearer <access>`. Язык ответа: `?lang=ru` или заголовок `Accept-Language` (en, ru, kk).
@@ -87,13 +110,17 @@ NFT выдаются в тестовой сети Polygon Amoy: это бесп�
 | `PATCH, DELETE /api/events/{id}/` | владелец, админ | Изменить или удалить |
 | `POST /api/events/{id}/moderate/` | админ | Опубликовать или отклонить |
 | `POST, DELETE /api/events/{id}/favorite/` | вошедший | Добавить в избранное или убрать |
-| `GET /api/search/?q=текст` | все | Поиск по событиям, площадкам и организаторам |
+| `GET /api/search/?q=текст` | все | Поиск по названиям событий, площадок и организаторов |
 | `GET /api/favorites/` | вошедший | Моё избранное |
 | `POST /api/checkin/` | вошедший | Отметка посещения по коду из QR |
 | `GET /api/visits/` | вошедший | Мои посещения и статус NFT |
 | `GET /api/events/{id}/checkin-code/` | владелец, админ | Код для QR и число отметившихся |
 | `POST /api/visits/{id}/claim/` | вошедший | Получить NFT за посещение или повторить выдачу |
 | `GET /api/nft/metadata/{id}/` | все | Метаданные токена (на них ссылается `tokenURI`) |
+| `GET /api/loyalty/` | все | Уровни NFT и прогресс текущего пользователя |
+| `POST /api/events/{id}/discount/` | вошедший | Получить код скидки на платное событие по своему уровню |
+| `GET /api/discounts/` | вошедший | Мои коды скидок |
+| `POST /api/discounts/redeem/` | организатор, админ | Погасить код скидки на своём событии |
 | `POST /api/organizers/apply/` | вошедший | Стать организатором |
 | `GET, PATCH /api/organizers/me/` | организатор | Свой профиль организатора |
 | `GET /api/categories/`, `/api/venues/`, `/api/organizers/` | все | Справочники |
@@ -106,7 +133,7 @@ NFT выдаются в тестовой сети Polygon Amoy: это бесп�
 |---|---|
 | `accounts` | User (роль, кошелёк, язык) |
 | `events` | Category, Venue, Organizer, Event, Favorite |
-| `rewards` | Visit (check-in), NFTReward |
+| `rewards` | Visit (check-in), NFTReward, LoyaltyLevel, DiscountCode |
 
 Фронтенд (`frontend/src/app/`):
 

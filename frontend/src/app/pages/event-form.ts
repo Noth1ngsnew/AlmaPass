@@ -133,6 +133,13 @@ function toLocalInput(iso: string): string {
               <span>{{ 'form.price' | t }}</span>
               <input name="price" type="number" min="0" step="100" [(ngModel)]="price" required />
             </label>
+            <label class="check">
+              <input name="nftDiscount" type="checkbox" [(ngModel)]="nftDiscount" />
+              <span>
+                {{ 'form.nftDiscount' | t }}
+                <small class="muted check__hint">{{ 'form.nftDiscountHint' | t }}</small>
+              </span>
+            </label>
           </fieldset>
 
           <fieldset>
@@ -191,6 +198,7 @@ export class EventForm {
   protected start = '';
   protected end = '';
   protected price = 0;
+  protected nftDiscount = true;
 
   protected venueName = '';
   protected venueAddress = '';
@@ -226,6 +234,7 @@ export class EventForm {
           this.start = toLocalInput(event.start_at);
           this.end = toLocalInput(event.end_at);
           this.price = Number(event.price);
+          this.nftDiscount = event.nft_discount;
           this.ready.set(true);
         },
         error: () => this.loadError.set(true),
@@ -259,6 +268,7 @@ export class EventForm {
       start_at: new Date(this.start).toISOString(),
       end_at: new Date(this.end).toISOString(),
       price: String(this.price ?? 0),
+      nft_discount: this.nftDiscount,
     } as unknown as EventPayload;
 
     this.busy.set(true);

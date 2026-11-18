@@ -61,6 +61,7 @@ class EventSerializer(serializers.ModelSerializer):
     is_favorite = serializers.SerializerMethodField()
     is_visited = serializers.SerializerMethodField()
     visits_count = serializers.SerializerMethodField()
+    my_discount = serializers.SerializerMethodField()
 
     class Meta:
         model = Event
@@ -68,7 +69,7 @@ class EventSerializer(serializers.ModelSerializer):
             'id', 'title', 'description',
             'title_en', 'title_ru', 'title_kk', 'description_en', 'description_ru', 'description_kk',
             'category', 'venue', 'organizer', 'category_id', 'venue_id',
-            'start_at', 'end_at', 'price', 'image_url', 'source_url', 'nft_image_url',
+            'start_at', 'end_at', 'price', 'image_url', 'source_url', 'nft_image_url', 'nft_discount', 'my_discount',
             'status', 'is_favorite', 'is_visited', 'visits_count', 'created_at',
         )
         read_only_fields = ('status', 'created_at')
@@ -84,6 +85,10 @@ class EventSerializer(serializers.ModelSerializer):
 
     def get_is_visited(self, obj):
         return obj.id in self.context.get('visited_ids', ())
+
+    def get_my_discount(self, obj):
+        # Код скидки текущего пользователя на это событие, если он уже получен
+        return self.context.get('discounts', {}).get(obj.id)
 
     def get_visits_count(self, obj):
         # Заполняется только в кабинете организатора (?mine=1)

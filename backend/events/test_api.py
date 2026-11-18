@@ -127,8 +127,19 @@ class ApiTest(APITestCase):
         self.assertEqual(self.client.get('/api/search/?q=j').data['total'], 0)
         self.assertEqual(self.client.get('/api/search/').data['total'], 0)
 
-    def test_search_by_category_name(self):
-        self.assertEqual(len(self.client.get('/api/search/?q=музыка').data['events']), 1)
+    def test_search_looks_only_at_names(self):
+        self.published.description_en = 'A demo evening of jazz'
+        self.published.save()
+        self.venue.address = 'Demo street 5'
+        self.venue.save()
+        self.organizer.description = 'We run demo concerts'
+        self.organizer.save()
+        # Слово есть только в описании, адресе и категории — результатов быть не должно
+        self.assertEqual(self.client.get('/api/search/?q=demo').data['total'], 0)
+        self.assertEqual(self.client.get('/api/search/?q=музыка').data['total'], 0)
+        # По названию на любом языке — находится
+        self.assertEqual(len(self.client.get('/api/search/?q=ночь').data['events']), 1)
+        self.assertEqual(len(self.client.get('/api/search/?q=JAZZ').data['events']), 1)
 
     def test_organizer_cabinet(self):
         self.assertEqual(self.client.get('/api/organizers/me/').status_code, 401)

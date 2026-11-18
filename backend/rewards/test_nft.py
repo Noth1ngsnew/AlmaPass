@@ -126,3 +126,30 @@ class NFTFlowTest(APITestCase):
         self.assertEqual(visit['nft_reward']['status'], 'pending')
         r = self.client.post(f'/api/visits/{visit["id"]}/claim/')
         self.assertEqual((r.status_code, r.data['code']), (503, 'not_configured'))
+
+
+@unittest.skipUnless(HAS_TESTER, 'install requirements-dev.txt to run NFT tests')
+class GiveDemoNftsOnChainTest(NFTFlowTest):
+    # Запускаем только свой тест, родительские уже выполнены в NFTFlowTest
+    """Команда подготовки к показу выдаёт настоящие токены и поднимает уровень."""
+
+    def test_command_mints_and_unlocks_silver(self):
+        from io import StringIO
+
+        from django.core.management import call_command
+
+        user = self.login('demo_user', '0x' + 'f6' * 20)
+        for i in range(3):
+            Event.objects.create(title_en=f'Extra {i}', status=Event.Status.PUBLISHED, category=self.event.category,
+                                 venue=self.event.venue, organizer=self.event.organizer,
+                                 start_at=self.event.start_at, end_at=self.event.end_at)
+        before = self.contract.functions.totalMinted().call()
+        out = StringIO()
+        call_command('give_demo_nfts', 'demo_user', '--count', '3', stdout=out)
+        self.assertEqual(self.contract.functions.totalMinted().call(), before + 3)
+        self.assertIn('Silver', out.getvalue())
+        self.assertEqual(NFTReward.objects.filter(visit__user=user, status='minted').count(), 3)
+
+
+for _name in [n for n in dir(NFTFlowTest) if n.startswith('test_')]:
+    setattr(GiveDemoNftsOnChainTest, _name, None)

@@ -65,7 +65,8 @@ DESCRIPTION = {
 
 
 class Command(BaseCommand):
-    help = 'Наполняет базу демо-данными: категории, площадки, организаторы, события. Повторный запуск безопасен.'
+    help = ('Наполняет базу демо-данными: категории, площадки, организаторы, события. Повторный запуск безопасен '
+            'и переносит даты демо-событий на ближайшие дни.')
 
     def handle(self, *args, **options):
         categories = {}
@@ -91,7 +92,7 @@ class Command(BaseCommand):
         created_count = 0
         for i, (org, cat, venue, days, hour, hours, price, en, ru, kk) in enumerate(EVENTS):
             start = (today + timedelta(days=days)).replace(hour=hour)
-            _, created = Event.objects.get_or_create(
+            event, created = Event.objects.get_or_create(
                 title_en=en,
                 defaults={
                     'title_ru': ru, 'title_kk': kk,
@@ -105,6 +106,10 @@ class Command(BaseCommand):
                 },
             )
             created_count += created
+            if not created and (event.start_at != start):
+                # Повторный запуск: переносим демо-событие на ближайшие дни, чтобы оно не оказалось в прошлом
+                event.start_at, event.end_at = start, start + timedelta(hours=hours)
+                event.save(update_fields=['start_at', 'end_at', 'updated_at'])
 
         # Событие, которое идёт прямо сейчас: на нём показывают check-in.
         # Время обновляется при каждом запуске команды, поэтому запускайте её перед показом.

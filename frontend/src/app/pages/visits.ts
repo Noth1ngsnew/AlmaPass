@@ -1,17 +1,22 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { LevelCard } from '../components/level-card';
 import { Auth } from '../core/auth';
 import { EventsApi } from '../core/events-api';
 import { EventDatePipe, I18n, TPipe } from '../core/i18n';
-import { Visit } from '../core/models';
+import { DiscountCode, LoyaltyInfo, Visit } from '../core/models';
 
 @Component({
   selector: 'app-visits',
-  imports: [RouterLink, TPipe, EventDatePipe],
+  imports: [RouterLink, TPipe, EventDatePipe, LevelCard],
   template: `
     <div class="container page">
       <h1 class="page__title">{{ 'visits.title' | t }}</h1>
+
+      @if (loyalty(); as info) {
+        <app-level-card [info]="info" />
+      }
 
       @if (error()) {
         <p class="state state--error">{{ 'common.error' | t }}</p>
@@ -83,6 +88,25 @@ import { Visit } from '../core/models';
           }
         </div>
       }
+
+      <h2 class="results__title results__title--spaced">{{ 'loyalty.codes' | t }}</h2>
+      @if (!discounts().length) {
+        <p class="muted">{{ 'loyalty.codesEmpty' | t }}</p>
+      } @else {
+        <div class="rows">
+          @for (item of discounts(); track item.id) {
+            <a class="row" [routerLink]="['/events', item.event.id]">
+              <span class="row__main">
+                <strong class="mono">{{ item.code }}</strong>
+                <small>{{ item.event.title }} · {{ item.event.start_at | eventDate: 'day' }}</small>
+              </span>
+              <span class="tag" [class.tag--fail]="item.status === 'used'">
+                −{{ item.discount_percent }}% · {{ (item.status === 'used' ? 'discount.used' : 'discount.active') | t }}
+              </span>
+            </a>
+          }
+        </div>
+      }
     </div>
   `,
 })
@@ -96,6 +120,8 @@ export class Visits implements OnDestroy {
   protected readonly error = signal(false);
   protected readonly notice = signal('');
   protected readonly busyId = signal<number | null>(null);
+  protected readonly loyalty = signal<LoyaltyInfo | null>(null);
+  protected readonly discounts = signal<DiscountCode[]>([]);
   protected readonly mintedCount = computed(
     () => this.visits().filter((visit) => visit.nft_reward?.status === 'minted').length,
   );
@@ -110,6 +136,8 @@ export class Visits implements OnDestroy {
   }
 
   private load(): void {
+    this.api.loyalty().subscribe({ next: (data) => this.loyalty.set(data), error: () => {} });
+    this.api.myDiscounts().subscribe({ next: (res) => this.discounts.set(res.results), error: () => {} });
     this.api.visits().subscribe({
       next: (res) => {
         this.visits.set(res.results);

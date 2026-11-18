@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { Auth } from '../core/auth';
 import { EventsApi } from '../core/events-api';
 import { EventDatePipe, I18n, TPipe } from '../core/i18n';
-import { EventItem, Organizer } from '../core/models';
+import { DiscountCode, EventItem, Organizer } from '../core/models';
 
 @Component({
   selector: 'app-organizer-cabinet',
@@ -66,6 +66,35 @@ import { EventItem, Organizer } from '../core/models';
           <div class="stat"><strong>{{ count('pending') }}</strong><span>{{ 'org.stat.pending' | t }}</span></div>
           <div class="stat stat--accent"><strong>{{ totalVisits() }}</strong><span>{{ 'org.stat.visits' | t }}</span></div>
         </div>
+
+        <form class="panel redeem" (ngSubmit)="redeem()">
+          <div>
+            <h2 class="results__title">{{ 'redeem.title' | t }}</h2>
+            <p class="muted">{{ 'redeem.text' | t }}</p>
+          </div>
+          <div class="redeem__row">
+            <input
+              name="code"
+              class="redeem__input mono"
+              [(ngModel)]="codeText"
+              [placeholder]="'redeem.placeholder' | t"
+              [attr.aria-label]="'redeem.title' | t"
+              spellcheck="false"
+              autocomplete="off"
+            />
+            <button class="btn" type="submit" [disabled]="!codeText.trim() || redeemBusy()">{{ 'redeem.button' | t }}</button>
+          </div>
+          @if (redeemed(); as item) {
+            <div class="form-ok redeem__result" role="status">
+              <strong>✓ {{ 'redeem.ok' | t }} · <span class="mono">{{ item.code }}</span></strong>
+              <span>{{ 'redeem.details' | t: { user: item.username, event: item.event.title } }}</span>
+              <span>{{ 'redeem.price' | t: { percent: item.discount_percent, final: money(item.final_price), price: money(item.event.price) } }}</span>
+            </div>
+          }
+          @if (redeemError(); as key) {
+            <p class="form-error" role="alert">{{ key | t }}</p>
+          }
+        </form>
 
         <h2 class="results__title">{{ 'org.events' | t }}</h2>
         @if (error()) {
@@ -158,6 +187,33 @@ export class OrganizerCabinet {
         },
       });
     });
+  }
+
+  protected codeText = '';
+  protected readonly redeemBusy = signal(false);
+  protected readonly redeemed = signal<DiscountCode | null>(null);
+  protected readonly redeemError = signal('');
+
+  protected redeem(): void {
+    this.redeemBusy.set(true);
+    this.redeemed.set(null);
+    this.redeemError.set('');
+    this.api.redeemDiscount(this.codeText.trim()).subscribe({
+      next: (item) => {
+        this.redeemBusy.set(false);
+        this.redeemed.set(item);
+        this.codeText = '';
+      },
+      error: (error: HttpErrorResponse) => {
+        this.redeemBusy.set(false);
+        const code = error.error?.code;
+        this.redeemError.set(['not_found', 'already_used'].includes(code) ? `redeem.error.${code}` : 'common.error');
+      },
+    });
+  }
+
+  protected money(value: string | number): string {
+    return Number(value).toLocaleString('ru-RU');
   }
 
   protected count(status: EventItem['status']): number {

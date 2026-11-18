@@ -44,7 +44,7 @@ class EventAdmin(admin.ModelAdmin):
         ('Қазақша', {'fields': ('title_kk', 'description_kk')}),
         ('Details', {'fields': ('category', 'venue', 'organizer', 'start_at', 'end_at', 'price',
                                 'image_url', 'source_url', 'status')}),
-        ('NFT / check-in', {'fields': ('nft_image_url', 'checkin_token')}),
+        ('NFT / check-in', {'fields': ('nft_image_url', 'nft_discount', 'checkin_token')}),
         ('System', {'fields': ('created_at', 'updated_at')}),
     )
 

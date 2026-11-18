@@ -9,10 +9,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from events.models import Event
+from events.permissions import is_admin
 
-from . import nft
-from .models import NFTReward, Visit
-from .serializers import VisitSerializer
+from . import loyalty, nft
+from .models import DiscountCode, LoyaltyLevel, NFTReward, Visit
+from .serializers import DiscountCodeSerializer, LoyaltyLevelSerializer, VisitSerializer
 
 
 def visit_context(request):
@@ -126,3 +127,87 @@ class NFTMetadataView(APIView):
                 {'trait_type': 'City', 'value': 'Almaty'},
             ],
         })
+
+
+class LoyaltyView(APIView):
+    """GET /api/loyalty/ — все уровни и, для вошедшего, сколько у него NFT и до какого уровня осталось."""
+
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        context = {'request': request}
+        data = {'levels': LoyaltyLevelSerializer(LoyaltyLevel.objects.all(), many=True, context=context).data,
+                'nft_count': None, 'current_level': None, 'next_level': None, 'nfts_to_next': None}
+        if request.user.is_authenticated:
+            info = loyalty.progress(request.user)
+            level = lambda item: LoyaltyLevelSerializer(item, context=context).data if item else None  # noqa: E731
+            data.update(nft_count=info['nft_count'], current_level=level(info['current']),
+                        next_level=level(info['next']), nfts_to_next=info['nfts_to_next'])
+        return Response(data)
+
+
+class EventDiscountView(APIView):
+    """POST /api/events/<id>/discount/ — получить код скидки на платное событие по своему уровню."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        event = get_object_or_404(Event, pk=pk, status=Event.Status.PUBLISHED)
+        existing = DiscountCode.objects.filter(user=request.user, event=event).first()
+        if existing:
+            return Response(DiscountCodeSerializer(existing, context={'request': request}).data)
+
+        if event.price <= 0:
+            return self.fail('free_event', 'This event is free.')
+        if not event.nft_discount:
+            return self.fail('not_offered', 'The organizer does not offer an NFT discount for this event.')
+        if event.end_at < timezone.now():
+            return self.fail('ended', 'This event has already ended.')
+
+        info = loyalty.progress(request.user)
+        level = info['current']
+        if not level or level.discount_percent == 0:
+            target = loyalty.first_discount_level()
+            return self.fail('level_too_low', 'Collect more NFTs to unlock a discount.', nft_count=info['nft_count'],
+                             nfts_needed=(target.min_nfts - info['nft_count']) if target else None)
+
+        code = DiscountCode.objects.create(code=loyalty.generate_code(), user=request.user, event=event, level=level,
+                                           discount_percent=level.discount_percent)
+        return Response(DiscountCodeSerializer(code, context={'request': request}).data, status=status.HTTP_201_CREATED)
+
+    @staticmethod
+    def fail(code, detail, **extra):
+        return Response({'code': code, 'detail': detail, **extra}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MyDiscountsView(generics.ListAPIView):
+    """GET /api/discounts/ — мои коды скидок."""
+
+    serializer_class = DiscountCodeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return DiscountCode.objects.filter(user=self.request.user).select_related('event', 'level')
+
+
+class RedeemDiscountView(APIView):
+    """POST /api/discounts/redeem/ {"code": "ALMA-…"} — организатор гасит код на своём событии."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        code = loyalty.normalize_code(request.data.get('code'))
+        item = DiscountCode.objects.select_related('event__organizer', 'user', 'level').filter(code=code).first()
+        # Чужие коды выглядят так же, как несуществующие
+        if not item or not (is_admin(request.user) or item.event.organizer.user_id == request.user.id):
+            return Response({'code': 'not_found', 'detail': 'Code not found for your events.'},
+                            status=status.HTTP_404_NOT_FOUND)
+        data = DiscountCodeSerializer(item, context={'request': request}).data
+        if item.status == DiscountCode.Status.USED:
+            return Response({'code': 'already_used', 'detail': 'This code has already been used.', 'discount': data},
+                            status=status.HTTP_400_BAD_REQUEST)
+        item.status = DiscountCode.Status.USED
+        item.used_at = timezone.now()
+        item.redeemed_by = request.user
+        item.save(update_fields=['status', 'used_at', 'redeemed_by'])
+        return Response(DiscountCodeSerializer(item, context={'request': request}).data)

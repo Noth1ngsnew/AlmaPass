@@ -1,5 +1,6 @@
 import { Component, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { DiscountBox } from '../components/discount-box';
 import { FavoriteToggle } from '../components/favorite-toggle';
 import { Auth } from '../core/auth';
 import { EventsApi } from '../core/events-api';
@@ -8,7 +9,7 @@ import { EventItem } from '../core/models';
 
 @Component({
   selector: 'app-event-detail',
-  imports: [RouterLink, TPipe, EventDatePipe, FavoriteToggle],
+  imports: [RouterLink, TPipe, EventDatePipe, FavoriteToggle, DiscountBox],
   template: `
     <div class="container detail">
       <a routerLink="/" class="back">← {{ 'event.back' | t }}</a>
@@ -64,6 +65,10 @@ import { EventItem } from '../core/models';
 
             @if (canManage(item)) {
               <a class="btn btn--ghost btn--block" [routerLink]="['/events', item.id, 'qr']">{{ 'qr.open' | t }}</a>
+            }
+
+            @if (item.my_discount || (item.nft_discount && price(item) && !hasEnded(item))) {
+              <app-discount-box [event]="item" />
             }
 
             <div class="nft">
@@ -123,6 +128,10 @@ export class EventDetail {
   protected canManage(item: EventItem): boolean {
     const user = this.auth.user();
     return !!user && (user.role === 'admin' || user.organizer_id === item.organizer.id);
+  }
+
+  protected hasEnded(item: EventItem): boolean {
+    return new Date(item.end_at).getTime() < Date.now();
   }
 
   protected price(item: EventItem): string {

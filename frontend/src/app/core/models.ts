@@ -12,6 +12,7 @@ export interface User {
   language: Lang;
   avatar_url: string;
   organizer_id: number | null;
+  loyalty: { nft_count: number; level: string; discount_percent: number };
 }
 
 export interface Category {
@@ -60,6 +61,37 @@ export interface EventItem {
   is_favorite: boolean;
   is_visited: boolean;
   visits_count: number | null;
+  nft_discount: boolean;
+  my_discount: { code: string; status: 'active' | 'used'; discount_percent: number } | null;
+}
+
+export interface LoyaltyLevel {
+  id: number;
+  name: string;
+  min_nfts: number;
+  discount_percent: number;
+}
+
+/** Уровни и прогресс; поля прогресса пустые, если пользователь не вошёл */
+export interface LoyaltyInfo {
+  levels: LoyaltyLevel[];
+  nft_count: number | null;
+  current_level: LoyaltyLevel | null;
+  next_level: LoyaltyLevel | null;
+  nfts_to_next: number | null;
+}
+
+export interface DiscountCode {
+  id: number;
+  code: string;
+  status: 'active' | 'used';
+  discount_percent: number;
+  level: string;
+  event: { id: number; title: string; start_at: string; price: string };
+  username: string;
+  final_price: string;
+  created_at: string;
+  used_at: string | null;
 }
 
 /** Поля формы события, которые уходят на сервер */
@@ -78,6 +110,7 @@ export interface EventPayload {
   image_url: string;
   source_url: string;
   nft_image_url: string;
+  nft_discount: boolean;
 }
 
 export interface NftReward {
